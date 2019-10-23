@@ -33,11 +33,10 @@ askColumn(N):-write(J), write( ':Dans quelle colonne'),read(N).
 cannotPlay(N):- \+integer(N);N>7;N<1;Ns is N-1, \+ get_free_index_column(Ns,6,'s',INDEX_LIBRE).
 
 
-play('X'):-write('X: Dans quelle colonne'), read(N), Ns is N-1, make_move(Ns,'X'), play('O').
-play('O'):-write('O: Dans quelle colonne'), read(N), Ns is N-1, make_move(Ns, 'O'), play('X').
+play('X'):-write('X: Dans quelle colonne'), read(N), Ns is N-1, make_move(Ns,'X'),playIa.  play('O'):-write('O: Dans quelle colonne'), read(N), Ns is N-1, make_move(Ns, 'O'), play('X').
 
 
-playIa:-random_between(0,6,R)
+playIa:-random_between(0,6,R),make_move(R,'O'),play('X'). 
 
 
 % Insert j in nth column with current board b resulting in r
