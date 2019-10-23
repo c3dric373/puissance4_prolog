@@ -38,6 +38,19 @@ play('X'):-write('X: Dans quelle colonne'), read(N), Ns is N-1, make_move(Ns,'X'
 
 playIa:-random_between(0,6,R),make_move(R,'O'),play('X'). 
 
+gameOver(X):-overHor(X);overVer(X,6);overDiag(X).
+
+overVer(X,0):-board(B),nth0(0, B, R),  sublist([X,X,X,X],R).
+overVer(X,N):-board(B),nth0(N, B, R),  sublist([X,X,X,X],R), Ns is N-1,  overVer(X,Ns).
+
+
+% Fonction qui renvoie une sous-liste à partir d'une liste L
+/* Paramètres : S sous-liste, L liste */
+prefix(P,L):-append(P,_,L).
+sublist(S,L):-prefix(S,L).
+sublist(S,[_|T]):-sublist(S,T).
+
+
 
 % Insert j in nth column with current board b resulting in r
 make_move(N_COL, J):-board(B),nth0(N_COL, B, COL),get_free_index_column(COL,6,'s',INDEX_LIBRE),replace(COL,INDEX_LIBRE, J,COL_RES),replace(B,N_COL, COL_RES, R),retract(board(_)),assert(board(R)),display.
