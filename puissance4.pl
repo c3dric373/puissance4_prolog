@@ -50,7 +50,7 @@ get_free_index_column(_, INDEX, '-' , INDEX):-!.
 get_free_index_column(COL, INDEX, _, INDEX_LIBRE):-INDEX1 is INDEX -1, nth0(INDEX1, COL, VALEUR1), get_free_index_column(COL,INDEX1,VALEUR1,INDEX_LIBRE).
 
 % Get the number of aligned pieces if we play at the provided column, then come back to the original board
-get_nb_aligned_pieces(NB_COL,Player, Nb_pieces_aligned):- board(Current_board), make_move(NB_COL,Player,INDEX_LIBRE),count_vertical_pieces(Player,NB_COL,INDEX_LIBRE,1, Nb_pieces_aligned),retract(board(_)),assert(board(Current_board)).
+get_nb_aligned_pieces(NB_COL,Player, Nb_pieces_aligned):- board(Current_board), make_move(NB_COL,Player,INDEX_LIBRE),count_vertical_pieces(Player,NB_COL,INDEX_LIBRE,1, Nb_pieces_vertical),count_horizontal_pieces(Player,NB_COL, INDEX_LIBRE,Nb_pieces_horizontal),max(Nb_pieces_vertical,Nb_pieces_horizontal,Nb_pieces_aligned),retract(board(_)),assert(board(Current_board)).
 
 % Count the number of similar pieces that are under the last piece that we have put in the column
 	count_vertical_pieces(Player,_,_,4, _). % win
@@ -63,14 +63,30 @@ get_nb_aligned_pieces(NB_COL,Player, Nb_pieces_aligned):- board(Current_board), 
 	% Stop when the next piece is different from the current piece
 	count_vertical_pieces(Player,NB_COL,INDEX_LIBRE,Last_count, Real_Count):- board(B), nth0(NB_COL, B, COL),Next_piece is INDEX_LIBRE+1, \+nth0(Next_piece,COL,Player), Real_Count is Last_count.
 
-% STILL WORKING ON :
-getLine(NB_Line, Line,0):-board(B), nth0(0, B, COL), nth0(NB_Line, COL, Element), append([],Element,Line),getLine(NB_Line, Line,1).
-getLine(NB_Line, Line,Index):-board(B), nth0(Index, B, COL), nth0(NB_Line, COL, Element),Old_line is Line,append(Old_line,Element,Line), Index1 is Index+1,getLine(NB_Line, Line,Index1).
-getLine(NB_Line, Line,6):-!.
+% get a Line
+	getLine(NB_Line, Line,7,Line):-!.
+	getLine(NB_Line, Line,Index,Total_line):-board(B), nth0(Index, B, COL), nth0(NB_Line, COL, Element),append(Line,[Element],New_line), Index1 is Index+1,getLine(NB_Line, New_line,Index1,Total_line).
 
-count_horizontal_pieces(Player,NB_COL,Last_count, Real_Count).
-count_left_horizontal_pieces(Player,NB_COL,Last_count, Real_Count).
-count_right_horizontal_pieces(Player,NB_COL,Last_count, Real_Count).
+% count the number of horizontal aligned pieces when we put a piece in the selected column
+% NB_Line correspond to the INDEX_Libre (index in the column where we have put the piece)
+	count_horizontal_pieces(Player,NB_COL, NB_Line,Count):- count_left_horizontal_pieces(Player,NB_COL,NB_Line,1, Count_left),count_right_horizontal_pieces(Player,NB_COL,NB_Line,0, Count_right), Count is Count_left+Count_right.
+
+	% Count the number of similar pieces at the left of the last added piece
+	count_left_horizontal_pieces(Player,0,_,Last_count, Last_count):-!.
+	% get the line of the last added piece and compare it to the piece next to it 
+	count_left_horizontal_pieces(Player,NB_COL,NB_Line,Last_count, Real_Count):-getLine(NB_Line,[],0,Line), Next_piece is NB_COL-1, nth0(Next_piece,Line,Player),New_Count is Last_count+1,count_left_horizontal_pieces(Player,Next_piece,NB_Line,New_Count, Real_Count).
+	count_left_horizontal_pieces(Player,NB_COL,NB_Line,Last_count, Real_Count):-getLine(NB_Line,[],0,Line), Next_piece is NB_COL-1, \+nth0(Next_piece,Line,Player),Real_Count is Last_count.
+
+	% Count the number of similar pieces at the right of the last added piece
+	count_right_horizontal_pieces(Player,6,NB_Line,Last_count, Last_count):-!.
+	% get the line of the last added piece and compare it to the piece next to it 
+	count_right_horizontal_pieces(Player,NB_COL,NB_Line,Last_count, Real_Count):-getLine(NB_Line,[],0,Line), Next_piece is NB_COL+1, nth0(Next_piece,Line,Player),New_Count is Last_count+1,count_right_horizontal_pieces(Player,Next_piece,NB_Line,New_Count, Real_Count).
+	count_right_horizontal_pieces(Player,NB_COL,NB_Line,Last_count, Real_Count):-getLine(NB_Line,[],0,Line), Next_piece is NB_COL+1, \+nth0(Next_piece,Line,Player),Real_Count is Last_count.
+
+% Get the max
+max(X,Y,Max):- X>=Y, Max is X.
+max(X,Y,Max):- X<Y, Max is Y.
+ 
 
 
 reset:-retract(board(_)), assert(board([['-','-','-','-','-','-'],
