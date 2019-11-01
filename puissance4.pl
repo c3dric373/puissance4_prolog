@@ -34,11 +34,11 @@ call_column('X', N_ok) :- write('X: Dans quelle colonne : '), read(N), chooseMov
 call_column('O', N_ok) :- write('O: Dans quelle colonne : '), read(N), chooseMove('O', N, N_ok).
 %fin du choix de la colonne jouer
 
-play('X'):-call_column('X', N_ok), Ns is N_ok-1, make_move(Ns,'X',_), play('O').
-play('O'):-call_column('O', N_ok), Ns is N_ok-1, make_move(Ns,'O',_), play('X').
+play('X'):-call_column('X', N_ok), Ns is N_ok-1, make_move(Ns,'X',_),display, play('O').
+play('O'):-call_column('O', N_ok), Ns is N_ok-1, make_move(Ns,'O',_),display, play('X').
 
 % Insert j in nth column with current board b resulting in r
-make_move(N_COL, J,INDEX_LIBRE):-board(B),nth0(N_COL, B, COL),get_free_index_column(COL,6,'s',INDEX_LIBRE),replace(COL,INDEX_LIBRE, J,COL_RES),replace(B,N_COL, COL_RES, R),retract(board(_)),assert(board(R)),display.
+make_move(N_COL, J,INDEX_LIBRE):-board(B),nth0(N_COL, B, COL),get_free_index_column(COL,6,'s',INDEX_LIBRE),replace(COL,INDEX_LIBRE, J,COL_RES),replace(B,N_COL, COL_RES, R),retract(board(_)),assert(board(R)).%,display.
 
 
 % replacing element at index I in L
@@ -61,8 +61,8 @@ get_free_index_column(COL, INDEX, _, INDEX_LIBRE):-INDEX1 is INDEX -1, nth0(INDE
 % COUNT THE NUMBER OF ALIGNED PIECE IF WE PLAY AT THE SELECTED COLUMN
 %---------------------------------------------------------------------
 
-% Get the number of aligned pieces if we play at the provided column, then come back to the original board
-get_nb_aligned_pieces(NB_COL,Player, Nb_pieces_aligned):- board(Current_board), make_move(NB_COL,Player,INDEX_LIBRE),count_vertical_pieces(Player,NB_COL,INDEX_LIBRE,1, Nb_pieces_vertical),count_horizontal_pieces(Player,NB_COL, INDEX_LIBRE,Nb_pieces_horizontal),count_diagonal_pieces(Player,NB_COL,INDEX_LIBRE,Nb_pieces_diagonal),max(Nb_pieces_vertical,Nb_pieces_horizontal,Max_vert_hor),max(Max_vert_hor,Nb_pieces_diagonal,Nb_pieces_aligned),retract(board(_)),assert(board(Current_board)).
+% Get the number of aligned pieces if we play at the provided column
+get_nb_aligned_pieces(NB_COL,Player,INDEX_LIBRE, Nb_pieces_aligned):-count_vertical_pieces(Player,NB_COL,INDEX_LIBRE,1, Nb_pieces_vertical),count_horizontal_pieces(Player,NB_COL, INDEX_LIBRE,Nb_pieces_horizontal),count_diagonal_pieces(Player,NB_COL,INDEX_LIBRE,Nb_pieces_diagonal),max(Nb_pieces_vertical,Nb_pieces_horizontal,Max_vert_hor),max(Max_vert_hor,Nb_pieces_diagonal,Nb_pieces_aligned).
 
 % Count the number of similar pieces that are under the last piece that we have put in the column
 
@@ -123,8 +123,20 @@ count_diagonal_pieces(Player,NB_COL,INDEX_LIBRE,Count):- count_right_diagonal_pi
 
 %------------ End of the pieces'counting --------------------------------
 
- 
 
+%--------------------------------------------------------------------------------------
+% First Heuristic : Moves that align the more pieces and that disturb the other player
+%--------------------------------------------------------------------------------------
+% Give a score to each column : Nb_pieces that we could align MINUS Nb_pieces that the other player could align after our move
+get_list_of_scores_by_column(7, Player,List,List):-!.
+get_list_of_scores_by_column(Nb_col,Player,List, Final_list):- board(Current_board), make_move(Nb_col,Player,INDEX_LIBRE), get_nb_aligned_pieces(Nb_col,Player,INDEX_LIBRE, Nb_pieces_aligned),get_max_score_next_player(0,'O',-5, Max_next_player),Score is Nb_pieces_aligned-Max_next_player,append(List,[Score],New_List),New_Nb_col is Nb_col+1,retract(board(_)), assert(board(Current_board)), get_list_of_scores_by_column(New_Nb_col,Player,New_List, Final_list).
+
+get_max_score_next_player(7, Player,Curr_max, Curr_max):-!.
+get_max_score_next_player(Nb_col, Player,Curr_max, Real_max):- board(Current_board), make_move(Nb_col,Player,INDEX_LIBRE), get_nb_aligned_pieces(Nb_col,Player,INDEX_LIBRE, Nb_pieces_aligned), max(Curr_max,Nb_pieces_aligned, New_max),New_Nb_col is Nb_col+1, retract(board(_)), assert(board(Current_board)),get_max_score_next_player(New_Nb_col, Player,New_max, Real_max).
+
+choose_move_IA_Heur1(Nb_col,Player):-get_list_of_scores_by_column(0,Player,[],List).%choose the max from the List
+
+%----------------- End of First heuristic
 
 reset:-retract(board(_)), assert(board([['-','-','-','-','-','-'],
             ['-','-','-','-','-','-'],
