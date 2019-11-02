@@ -34,7 +34,7 @@ call_column('X', N_ok) :- write('X: Dans quelle colonne : '), read(N), chooseMov
 call_column('O', N_ok) :- write('O: Dans quelle colonne : '), read(N), chooseMove('O', N, N_ok).
 %fin du choix de la colonne jouer
 
-play('X'):-call_column('X', N_ok), Ns is N_ok-1, make_move(Ns,'X',Index),get_nb_aligned_pieces(Ns,'X',Index, Nb_pieces_aligned),Nb_pieces_aligned>=4,display, play('O').
+play('X'):-call_column('X', N_ok), Ns is N_ok-1, make_move(Ns,'X',Index),get_nb_aligned_pieces(Ns,'X',Index, Nb_pieces_aligned),check_victory('X',Nb_pieces_aligned).
 play('O'):-call_column('O', N_ok), Ns is N_ok-1, make_move(Ns,'O',Index),get_nb_aligned_pieces(Ns,'O',Index, Nb_pieces_aligned),check_victory('O',Nb_pieces_aligned).
 
 check_victory('O',Nb_pieces_aligned):-Nb_pieces_aligned>=4,display, write('you win'),reset.
@@ -69,7 +69,7 @@ get_free_index_column(COL, INDEX, _, INDEX_LIBRE):-INDEX1 is INDEX -1, nth0(INDE
 % Get the number of aligned pieces if we play at the provided column
 get_nb_aligned_pieces(NB_COL,Player,INDEX_LIBRE, Nb_pieces_aligned):-count_vertical_pieces(Player,NB_COL,INDEX_LIBRE,1, Nb_pieces_vertical),count_horizontal_pieces(Player,NB_COL, INDEX_LIBRE,Nb_pieces_horizontal),count_diagonal_pieces(Player,NB_COL,INDEX_LIBRE,Nb_pieces_diagonal),max(Nb_pieces_vertical,Nb_pieces_horizontal,Max_vert_hor),max(Max_vert_hor,Nb_pieces_diagonal,Nb_pieces_aligned).
 
-% Count the number of similar pieces that are under the last piece that we have put in the column
+% Count the number of similar pieces that are under the last piece that we have put in the column (vertical count)
 
 	% Stop when it is the end of the list
 	count_vertical_pieces(Player,_,5,Last_count, Last_count):-!. 
@@ -133,9 +133,15 @@ count_diagonal_pieces(Player,NB_COL,INDEX_LIBRE,Count):- count_right_diagonal_pi
 % First Heuristic : Moves that align the more pieces and that disturb the other player
 %--------------------------------------------------------------------------------------
 
+next_player('X',P):- P='O'.
+next_player('O',P):- P='X'.
+
+
 % Give a score to each column 
+	% Simulate a move to know how many pieces we can align by playing in a column and how many pieces the opponent will align
+	% simulate a move, get the number of pieces aligned, get the number of pieces that the opponent will align, get back to the original board
 	get_list_of_scores_by_column(7, Player,List,List):-!.
-	get_list_of_scores_by_column(Nb_col,Player,List, Final_list):- board(Current_board), make_move(Nb_col,Player,INDEX_LIBRE), get_nb_aligned_pieces(Nb_col,Player,INDEX_LIBRE, Nb_pieces_aligned),get_max_score_next_player(0,'O',-5, Max_next_player),give_a_score(Nb_pieces_aligned,Max_next_player,Score),append(List,[Score],New_List),New_Nb_col is Nb_col+1,retract(board(_)), assert(board(Current_board)), get_list_of_scores_by_column(New_Nb_col,Player,New_List, Final_list).
+	get_list_of_scores_by_column(Nb_col,Player,List, Final_list):- board(Current_board), make_move(Nb_col,Player,INDEX_LIBRE), get_nb_aligned_pieces(Nb_col,Player,INDEX_LIBRE, Nb_pieces_aligned),next_player(Player,Next_player),get_max_score_next_player(0,Next_player,-5, Max_next_player),give_a_score(Nb_pieces_aligned,Max_next_player,Score),append(List,[Score],New_List),New_Nb_col is Nb_col+1,retract(board(_)), assert(board(Current_board)), get_list_of_scores_by_column(New_Nb_col,Player,New_List, Final_list).
 	% If the column is already full we enter -1000 to be sure that it will never be chosen and we continue 
 	get_list_of_scores_by_column(Nb_col,Player,List, Final_list):- N is Nb_col+1, cannotPlay(N), append(List,[-1000],New_List),New_Nb_col is Nb_col+1,get_list_of_scores_by_column(New_Nb_col,Player,New_List, Final_list). 
 
@@ -148,6 +154,7 @@ count_diagonal_pieces(Player,NB_COL,INDEX_LIBRE,Count):- count_right_diagonal_pi
 	give_a_score(Nb_pieces_aligned,Max_next_player,Score):- Max_next_player<4, Nb_pieces_aligned<4, Score is Nb_pieces_aligned - Max_next_player.
 
 % Get the max score that will have the next player, if he plays after us
+	% simulate every moves that the opponent can make and get the maximal score that he can make, then go back to the original board
 	get_max_score_next_player(7, Player,Curr_max, Curr_max):-!.
 	get_max_score_next_player(Nb_col, Player,Curr_max, Real_max):- board(Current_board), make_move(Nb_col,Player,INDEX_LIBRE), get_nb_aligned_pieces(Nb_col,Player,INDEX_LIBRE, Nb_pieces_aligned), max(Curr_max,Nb_pieces_aligned, New_max),New_Nb_col is Nb_col+1, retract(board(_)), assert(board(Current_board)),get_max_score_next_player(New_Nb_col, Player,New_max, Real_max).
 	% If the column is already full we look at the other columns
@@ -156,7 +163,7 @@ count_diagonal_pieces(Player,NB_COL,INDEX_LIBRE,Count):- count_right_diagonal_pi
 max_from_list(List,7,Max,Max):-!.
 max_from_list(List,Index,Max,Real_max):-nth0(Index, List, Value), max(Value,Max, New_max),New_index is Index+1,max_from_list(List,New_index,New_max,Real_max).
 
-%find index of the max of the list
+%find index(plural) of the max of the list
 	get_index_of_max(_,_,List_index,7,List_index):-!.
 	% Add to the index_list if the index correspond to the max
 	get_index_of_max(Max,List_value,List_index,Curr_index,Final_index_list):- nth0(Curr_index, List_value, Max), append(List_index,[Curr_index],New_list), New_index is Curr_index+1,get_index_of_max(Max,List_value,New_list,New_index,Final_index_list).
@@ -167,7 +174,7 @@ max_from_list(List,Index,Max,Real_max):-nth0(Index, List, Value), max(Value,Max,
 	% if there is just one best move, choose it
 	choose_move_IA_Heur1(Nb_col,Player,List,Max,List_index):-get_list_of_scores_by_column(0,Player,[],List),max_from_list(List,0,-20,Max),get_index_of_max(Max,List,[],0,List_index),length(List_index,1),nth0(0, List_index, Nb_col).
 	% else choose trandom move among the best ones -- A Ameliorer
-	choose_move_IA_Heur1(Nb_col,Player,List,Max,List_index):-get_list_of_scores_by_column(0,Player,[],List),max_from_list(List,0,-20,Max),get_index_of_max(Max,List,[],0,List_index), \+length(List_index,1),length(List_index,Size), Index_max is Size-1,random_between(0,Index_max,Nb_col).
+	choose_move_IA_Heur1(Nb_col,Player,List,Max,List_index):-get_list_of_scores_by_column(0,Player,[],List),max_from_list(List,0,-20,Max),get_index_of_max(Max,List,[],0,List_index), \+length(List_index,1),length(List_index,Size), Index_max is Size-1,random_between(0,Index_max,Index),nth0(Index, List_index, Nb_col).
 
 % play
 playIA_heur1(Player):-choose_move_IA_Heur1(Nb_col,Player,List,Max,List_index),make_move(Nb_col,Player,Index),get_nb_aligned_pieces(Nb_col,Player,Index, Nb_pieces_aligned),check_victory(Player,Nb_pieces_aligned).
