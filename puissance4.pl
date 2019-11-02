@@ -34,8 +34,13 @@ call_column('X', N_ok) :- write('X: Dans quelle colonne : '), read(N), chooseMov
 call_column('O', N_ok) :- write('O: Dans quelle colonne : '), read(N), chooseMove('O', N, N_ok).
 %fin du choix de la colonne jouer
 
-play('X'):-call_column('X', N_ok), Ns is N_ok-1, make_move(Ns,'X',_),display, play('O').
-play('O'):-call_column('O', N_ok), Ns is N_ok-1, make_move(Ns,'O',_),display,playIA_heur1('X').%, play('X').
+play('X'):-call_column('X', N_ok), Ns is N_ok-1, make_move(Ns,'X',Index),get_nb_aligned_pieces(Ns,'X',Index, Nb_pieces_aligned),Nb_pieces_aligned>=4,display, play('O').
+play('O'):-call_column('O', N_ok), Ns is N_ok-1, make_move(Ns,'O',Index),get_nb_aligned_pieces(Ns,'O',Index, Nb_pieces_aligned),check_victory('O',Nb_pieces_aligned).
+
+check_victory('O',Nb_pieces_aligned):-Nb_pieces_aligned>=4,display, write('you win').
+check_victory('O',Nb_pieces_aligned):-Nb_pieces_aligned<4,display, playIA_heur1('X').
+check_victory('X',Nb_pieces_aligned):-Nb_pieces_aligned>=4,display, write('IA win').
+check_victory('X',Nb_pieces_aligned):-Nb_pieces_aligned<4,display,play('O').
 
 % Insert j in nth column with current board b resulting in r
 make_move(N_COL, J,INDEX_LIBRE):-board(B),nth0(N_COL, B, COL),get_free_index_column(COL,6,'s',INDEX_LIBRE),replace(COL,INDEX_LIBRE, J,COL_RES),replace(B,N_COL, COL_RES, R),retract(board(_)),assert(board(R)).%,display.
@@ -130,9 +135,17 @@ count_diagonal_pieces(Player,NB_COL,INDEX_LIBRE,Count):- count_right_diagonal_pi
 
 % Give a score to each column : Nb_pieces that we could align MINUS Nb_pieces that the other player could align after our move
 get_list_of_scores_by_column(7, Player,List,List):-!.
-get_list_of_scores_by_column(Nb_col,Player,List, Final_list):- board(Current_board), make_move(Nb_col,Player,INDEX_LIBRE), get_nb_aligned_pieces(Nb_col,Player,INDEX_LIBRE, Nb_pieces_aligned),get_max_score_next_player(0,'O',-5, Max_next_player),Score is Nb_pieces_aligned-Max_next_player,append(List,[Score],New_List),New_Nb_col is Nb_col+1,retract(board(_)), assert(board(Current_board)), get_list_of_scores_by_column(New_Nb_col,Player,New_List, Final_list).
-% If the column is already full we enter -1000 to be sure that it will be never choosen and we continue 
-% Error with this exception get_list_of_scores_by_column(Nb_col,Player,List, Final_list):- \+get_free_index_column(Nb_col,6,'s',_), append(List,[-1000],New_List),New_Nb_col is Nb_col+1,get_list_of_scores_by_column(New_Nb_col,Player,New_List, Final_list). 
+get_list_of_scores_by_column(Nb_col,Player,List, Final_list):- board(Current_board), make_move(Nb_col,Player,INDEX_LIBRE), get_nb_aligned_pieces(Nb_col,Player,INDEX_LIBRE, Nb_pieces_aligned),get_max_score_next_player(0,'O',-5, Max_next_player),give_a_score(Nb_pieces_aligned,Max_next_player,Score),append(List,[Score],New_List),New_Nb_col is Nb_col+1,retract(board(_)), assert(board(Current_board)), get_list_of_scores_by_column(New_Nb_col,Player,New_List, Final_list).
+% If the column is already full we enter -1000 to be sure that it will never be chosen and we continue 
+% Error get_list_of_scores_by_column(Nb_col,Player,List, Final_list):- \+get_free_index_column(Nb_col,6,'s',_), append(List,[-1000],New_List),New_Nb_col is Nb_col+1,get_list_of_scores_by_column(New_Nb_col,Player,New_List, Final_list). 
+
+% give a score for each move 
+% if the opponent will align 4 pieces, we must not play there, score=-1000
+give_a_score(Nb_pieces_aligned,Max_next_player,Score):- Max_next_player>=4, Nb_pieces_aligned<4, Score is -1000.
+% if we aligned pieces before the opponent, we must play there : score =1000 
+give_a_score(Nb_pieces_aligned,Max_next_player,Score):- Nb_pieces_aligned>=4, Score is 1000.
+% else score= Nb_pieces_aligned-Max_next_player
+give_a_score(Nb_pieces_aligned,Max_next_player,Score):- Max_next_player<4, Nb_pieces_aligned<4, Score is Nb_pieces_aligned - Max_next_player.
 
 % Get the max score that will have the next player, if he plays after us
 get_max_score_next_player(7, Player,Curr_max, Curr_max):-!.
@@ -153,7 +166,7 @@ choose_move_IA_Heur1(Nb_col,Player,List,Max,List_index):-get_list_of_scores_by_c
 % else choose trandom move among the best ones -- A REVOIR
 choose_move_IA_Heur1(Nb_col,Player,List,Max,List_index):-get_list_of_scores_by_column(0,Player,[],List),max_from_list(List,0,-8,Max),get_index_of_max(Max,List,[],0,List_index), \+length(List_index,1),length(List_index,Size), Index_max is Size-1,random_between(0,Index_max,Nb_col).
 
-playIA_heur1(Player):-choose_move_IA_Heur1(Nb_col,Player,List,Max,List_index),make_move(Nb_col,'X',_),display,play('O').
+playIA_heur1(Player):-choose_move_IA_Heur1(Nb_col,Player,List,Max,List_index),make_move(Nb_col,Player,Index),get_nb_aligned_pieces(Nb_col,Player,Index, Nb_pieces_aligned),check_victory(Player,Nb_pieces_aligned).
 
 %----------------- End of First heuristic
 
