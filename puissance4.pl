@@ -189,6 +189,11 @@ get_score_heur3(Board,Player,Score):-get_score_column_heur3(6,Board,0,Score).
 get_score_column_heur3(0, Board, Score):-nth0(N_COL, Board, COL),get_free_index_column(COL,6,'s', INDEX_LIBRE).
 
 get_score_heur3(Col, Board, Score, Res).
+get_score_column_heur3(Col,1,Score):-sublist(L,1,0), score_list().
+get_score_column_heur3(Col,Index_Row,Player,Score):-Start_Index is Index_Row,
+End_Index is Index_Row + 3,
+sublist(L,Start_Index,End_Index,Col), 
+score_list(L,Player,0,Score).
 get_score_column_heur3(6, Board, Score):-nth0(N_COL, Board, COL),get_free_index_column(COL,6,  's', INDEX_LIBRE).
 
 
@@ -206,6 +211,9 @@ is_from_player(Board, N_Col, N_Row, Player):-get_slot(Board, N_col, N_row, Slot)
 get_slot(Board, N_COL, N_ROW,Slot):-nth0(N_COL, Board, COL),N is 5-N_ROW,nth0(N, COL,Slot).
 
 
+sublist(S,M,N,[_A|B]):- M>0, M<N, sublist(S,M-1,N-1,B).
+sublist(S,M,N,[A|B]):- 0 is M, M<N, N2 is N-1, S=[A|D], sublist(D,0,N2,B).
+sublist([],0,0,_).
 
 
 
