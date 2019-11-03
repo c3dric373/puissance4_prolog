@@ -185,9 +185,27 @@ playIA_heur1(Player):-choose_move_IA_Heur1(Nb_col,Player,List,Max,List_index),ma
 
 %----------------- Heuristic 3: Each coin will have a score equal to the number of neighbors of the same color, the score of the player will be the sum of all scores of his coins. 
 
-get_score_heur3(Board,Player,Score):-get_score_column_heur3(6,Board,0,Score).
-get_score_column_heur3(0, Board, Score):-nth0(N_COL, Board, COL),get_free_index_column(COL,6,'s', INDEX_LIBRE).
+get_score_heur3(Board,Player,Score):-get_score_heur3_col(0,Board,Player,0,Score).
 
+get_score_heur3_col(0, Board, Player, 0, Res):-Factor is 6,
+nth0(0, Board, COL),
+score_list(COL, Player, 0, SlotsInCol), 
+Sum is SlotsInCol * Factor,
+N_Col is 1, 
+get_score_heur3_col(N_Col, Board,Player, Sum,Res).
+
+get_score_heur3_col(N_Col, Board, Player, Sum, Res):-Factor is 6-N_Col,
+ nth0(N_Col, Board, COL),
+score_list(COL, Player, 0, SlotsInCol),
+N_Sum is SlotsInCol * Factor + Sum,
+Ns_Col is N_Col+1,
+get_score_heur3_col(Ns_Col, Board,Player, N_Sum,Res).
+
+get_score_heur3_col(6, Board, Player, Sum, Res):-Res is  Sum.
+
+
+get_score_column_heur3(0, Board, Score):-nth0(N_COL, Board, COL),get_free_index_column(COL,6,'s', INDEX_LIBRE).
+/*
 get_score_heur3(Col, Board, Score, Res).
 get_score_column_heur3(Col,1,Score):-sublist(L,1,0), score_list().
 get_score_column_heur3(Col,Index_Row,Player,Score):-Start_Index is Index_Row,
@@ -195,14 +213,13 @@ End_Index is Index_Row + 3,
 sublist(L,Start_Index,End_Index,Col), 
 score_list(L,Player,0,Score).
 get_score_column_heur3(6, Board, Score):-nth0(N_COL, Board, COL),get_free_index_column(COL,6,  's', INDEX_LIBRE).
-
+*/
 
 % Checks how many slots are equal to Player in List Column
 score_list([], Player, Sum,Res):-Res is Sum.
 score_list([H|T], Player, Sum,Res):-H==Player, NSum is Sum +1, score_list(T,Player,NSum,Res).
 score_list([H|T], Player, Sum,Res):-H\=Player,score_list(T,Player,Sum,Res).
 
- process(H):-write('ntm').
 % Checks whether a slot belongs to a certain player
 is_from_player(Board, N_Col, N_Row, Player):-get_slot(Board, N_col, N_row, Slot), Slot==Player.
 
