@@ -17,7 +17,7 @@ get_position(N):-draw_column_pos(N,0),NS is  N+1, get_position(NS).
 % Draw the pos of each column
 draw_column_pos(_,7):-nl.
 draw_column_pos(N,C):-board(X),nth0(C, X, R), nth0(N,R, R1), write(' '), write(R1), CS is C+1, draw_column_pos(N,CS).
-start:-reset,display,play('O').
+start:-reset,display,playIA_heur1st('O'). % Remplacer ici avec play('O') pour jouer
 
 % Ici on va voir si le coup est possible, s'il ne l'est pas on redemande
 chooseMove('X', N, N_ok):- \+cannotPlay(N), N_ok is N.
@@ -37,10 +37,10 @@ call_column('O', N_ok) :- write('O: Dans quelle colonne : '), read(N), chooseMov
 play('X'):-call_column('X', N_ok), Ns is N_ok-1, make_move(Ns,'X',Index),get_nb_aligned_pieces(Ns,'X',Index, Nb_pieces_aligned),check_victory('X',Nb_pieces_aligned).
 play('O'):-call_column('O', N_ok), Ns is N_ok-1, make_move(Ns,'O',Index),get_nb_aligned_pieces(Ns,'O',Index, Nb_pieces_aligned),check_victory('O',Nb_pieces_aligned).
 
-check_victory('O',Nb_pieces_aligned):-Nb_pieces_aligned>=4,display, write('you win'),reset.
-check_victory('O',Nb_pieces_aligned):-Nb_pieces_aligned<4,display, playIA_heur1('X').
-check_victory('X',Nb_pieces_aligned):-Nb_pieces_aligned>=4,display, write('IA win'), reset.
-check_victory('X',Nb_pieces_aligned):-Nb_pieces_aligned<4,display,play('O').
+check_victory('O',Nb_pieces_aligned):-Nb_pieces_aligned>=4,display, write('Vielle AI WON !'),reset. % A remplacer par YOU won
+check_victory('O',Nb_pieces_aligned):-Nb_pieces_aligned<4,display, playIA_heur1('X'). 
+check_victory('X',Nb_pieces_aligned):-Nb_pieces_aligned>=4,display, write('New IA WON'), reset. 
+check_victory('X',Nb_pieces_aligned):-Nb_pieces_aligned<4,display,playIA_heur1st('O'). % Remplacer ici avec play('O') pour jouer
 
 % Insert j in nth column with current board b resulting in r
 make_move(N_COL, J,INDEX_LIBRE):-board(B),nth0(N_COL, B, COL),get_free_index_column(COL,6,'s',INDEX_LIBRE),replace(COL,INDEX_LIBRE, J,COL_RES),replace(B,N_COL, COL_RES, R),retract(board(_)),assert(board(R)).%,display.
@@ -151,7 +151,11 @@ next_player('O',P):- P='X'.
 	% if we aligned pieces before the opponent, we must play there : score =10 
 	give_a_score(Nb_pieces_aligned,Max_next_player,Score):- Nb_pieces_aligned>=4, Score is 10.
 	% else score= Nb_pieces_aligned-Max_next_player
-	give_a_score(Nb_pieces_aligned,Max_next_player,Score):- Max_next_player<4, Nb_pieces_aligned<4, Score is Nb_pieces_aligned - Max_next_player.
+    give_a_score(Nb_pieces_aligned,Max_next_player,Score):- Max_next_player<4, Nb_pieces_aligned<4, amp(Max_next_player,New_MaxNP), amp(Nb_pieces_aligned,New_NbPA), Score is New_NbPA - New_MaxNP.
+
+% Amplification
+    amp(Num,New):- Num \= 3, New is Num, ! .
+    amp(Num,New):- Num = 3, New is 5, ! .
 
 % Get the max score that will have the next player, if he plays after us
 	% simulate every moves that the opponent can make and get the maximal score that he can make, then go back to the original board
@@ -180,6 +184,37 @@ max_from_list(List,Index,Max,Real_max):-nth0(Index, List, Value), max(Value,Max,
 playIA_heur1(Player):-choose_move_IA_Heur1(Nb_col,Player,List,Max,List_index),make_move(Nb_col,Player,Index),get_nb_aligned_pieces(Nb_col,Player,Index, Nb_pieces_aligned),check_victory(Player,Nb_pieces_aligned).
 
 %----------------- End of First heuristic
+
+
+%------------------------
+% 1st Heuristic Created : 
+%------------------------
+% Give a score to each column 
+	% Simulate a move to know how many pieces we can align by playing in a column and how many pieces the opponent will align
+	% simulate a move, get the number of pieces aligned, get the number of pieces that the opponent will align, get back to the original board
+	get_list_of_scores_by_column1st(7, Player,List,List):-!.
+	get_list_of_scores_by_column1st(Nb_col,Player,List, Final_list):- board(Current_board), make_move(Nb_col,Player,INDEX_LIBRE), get_nb_aligned_pieces(Nb_col,Player,INDEX_LIBRE, Nb_pieces_aligned),next_player(Player,Next_player),get_max_score_next_player(0,Next_player,-5, Max_next_player),give_a_score1st(Nb_pieces_aligned,Max_next_player,Score),append(List,[Score],New_List),New_Nb_col is Nb_col+1,retract(board(_)), assert(board(Current_board)), get_list_of_scores_by_column(New_Nb_col,Player,New_List, Final_list).
+	% If the column is already full we enter -1000 to be sure that it will never be chosen and we continue 
+	get_list_of_scores_by_column1st(Nb_col,Player,List, Final_list):- N is Nb_col+1, cannotPlay(N), append(List,[-1000],New_List),New_Nb_col is Nb_col+1,get_list_of_scores_by_column(New_Nb_col,Player,New_List, Final_list). 
+
+% give a score for each move 
+	% if after we play, the opponent align 4 pieces, we must not play there, score=-10
+	give_a_score1st(Nb_pieces_aligned,Max_next_player,Score):- Max_next_player>=4, Nb_pieces_aligned<4, Score is -10.
+	% if we aligned pieces before the opponent, we must play there : score =10 
+	give_a_score1st(Nb_pieces_aligned,Max_next_player,Score):- Nb_pieces_aligned>=4, Score is 10.
+	% else score= Nb_pieces_aligned-Max_next_player
+	give_a_score1st(Nb_pieces_aligned,Max_next_player,Score):- Max_next_player<4, Nb_pieces_aligned<4, Score is Nb_pieces_aligned - Max_next_player.
+
+% Choose the move with the best score
+	% if there is just one best move, choose it
+	choose_move_IA_Heur1st(Nb_col,Player,List,Max,List_index):-get_list_of_scores_by_column1st(0,Player,[],List),max_from_list(List,0,-20,Max),get_index_of_max(Max,List,[],0,List_index),length(List_index,1),nth0(0, List_index, Nb_col).
+	% else choose trandom move among the best ones -- A Ameliorer
+	choose_move_IA_Heur1st(Nb_col,Player,List,Max,List_index):-get_list_of_scores_by_column1st(0,Player,[],List),max_from_list(List,0,-20,Max),get_index_of_max(Max,List,[],0,List_index), \+length(List_index,1),length(List_index,Size), Index_max is Size-1,random_between(0,Index_max,Index),nth0(Index, List_index, Nb_col).
+
+% play
+playIA_heur1st(Player):-choose_move_IA_Heur1st(Nb_col,Player,List,Max,List_index),make_move(Nb_col,Player,Index),get_nb_aligned_pieces(Nb_col,Player,Index, Nb_pieces_aligned),check_victory(Player,Nb_pieces_aligned).
+
+%----------------- End of 1st heuristic created
 
 reset:-retract(board(_)), assert(board([['-','-','-','-','-','-'],
             ['-','-','-','-','-','-'],
