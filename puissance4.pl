@@ -186,15 +186,14 @@ playIA_heur1(Player):-choose_move_IA_Heur1(Nb_col,Player,List,Max,List_index),ma
 %----------------- Heuristic 3: Each coin will have a score equal to the number of neighbors of the same color, the score of the player will be the sum of all scores of his coins. 
 
 
-get_score_heur3(Board,'X',Score):-get_score_heur3_col(0,Board,'X',0,Res), Score is -Res.
-get_score_heur3(Board,'O',Score):-get_score_heur3_col(0,Board,'O',0,Score),write('tst').
+get_score_heur3(Board,'X',Score):-get_score_heur3_col(0,Board,'X',0,Res), Score = -Res.
+get_score_heur3(Board,'O',Score):-get_score_heur3_col(0,Board,'O',0,Score).
 
 get_score_heur3_col(0, Board, Player, 0, Res):-Factor is 6,
 nth0(0, Board, COL),
 score_list(COL, Player, 0, SlotsInCol), 
 Sum is SlotsInCol * Factor,
-N_Col is 1, 
-get_score_heur3_col(N_Col, Board,Player, Sum,Res).
+N_Col is 1, get_score_heur3_col(N_Col, Board,Player, Sum,Res), !.
 
 get_score_heur3_col(6, Board, Player, Sum, Res):-Res is  Sum,!.
 
