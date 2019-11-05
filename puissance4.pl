@@ -233,18 +233,22 @@ get_slot(Board, N_COL, N_ROW,Slot):-nth0(N_COL, Board, COL),N is 5-N_ROW,nth0(N,
 sublist(S,M,N,[_A|B]):- M>0, M<N, sublist(S,M-1,N-1,B).
 sublist(S,M,N,[A|B]):- 0 is M, M<N, N2 is N-1, S=[A|D], sublist(D,0,N2,B).
 sublist([],0,0,_).
-
-
-
-
-
 %---------------- End Heuristic 3
 
 
 
 %----------------- Start MinMax Algorithm 
+test(INDEX):-get_free_index_column(['I','O','X','O','X','O','X','O'], 6,'s',INDEX_LIBRE), INDEX is 5.
+test(INDEX):-INDEX is 4.
 
+get_valid_moves([],L,Res):-append([],L,Res).
+get_valid_moves([H|T],L,Res):-get_free_index_column(H,6,'s',NTM),length(T,X), I is 6-X,append(L,[I],L_new),get_valid_moves(T,L_new,Res).
+get_valid_moves([H|T],L,Res):- \+get_free_index_column(H,6,'s',NTM),get_valid_moves(T,L,Res).
 
+test_list([], L, Res):-append([],L,Res).
+test_list([H|T], L, Res):-write(H),append(L,['n'], L_new), test_list(T, L_new,Res).
+
+minmax(Board, Depth, Board_Result).
 
 
 
