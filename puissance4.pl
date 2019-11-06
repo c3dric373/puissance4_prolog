@@ -307,7 +307,7 @@ count_diagonal_piecesReview(B,Player,NB_COL,INDEX_LIBRE,Count):- count_right_dia
 		count_top_left_diagonal_piecesReview(B,Player,NB_COL,INDEX_LIBRE,Last_count, Real_Count):-New_NB_COL is NB_COL-1,nth0(New_NB_COL, B, COL), Next_piece is INDEX_LIBRE-1,\+nth0(Next_piece,COL,Player),Real_Count is Last_count.
 
 
-get_score_heur4(Nb_col,Board, Score):- nth0(Nb_col,Board, Col),get_free_index_column(Col, 6, _, INDEX_LIBRE), real_Index_libre is INDEX_LIBRE+1, get_nb_aligned_pieces(B,NB_COL,Player,real_Index_libre, Nb_pieces_aligned),scoring(Nb_pieces_aligned,Score).
+get_score_heur4(Nb_col,Board,Player, Score):- nth0(Nb_col,Board, Col),get_free_index_column(Col, 6, 's', INDEX_LIBRE), Real_Index_libre is INDEX_LIBRE+1, get_nb_aligned_piecesReview(Board,Nb_col,Player,Real_Index_libre, Nb_pieces_aligned),scoring(Nb_pieces_aligned,Score).
 
 scoring(Nb_pieces_aligned,Score):- Nb_pieces_aligned>=4, Score is 10.
 scoring(Nb_pieces_aligned,Score):- Nb_pieces_aligned==3, Score is 5.
