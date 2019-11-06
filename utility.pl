@@ -18,3 +18,7 @@ sublist(S,M,N,[_A|B]):- M>0, M<N, sublist(S,M-1,N-1,B).
 sublist(S,M,N,[A|B]):- 0 is M, M<N, 
 N2 is N-1, S=[A|D],sublist(D,0,N2,B).
 
+
+sinlist( [], _ ).
+sinlist( [X|XS], [X|XSS] ) :- sinlist( XS, XSS ).
+sinlist( [X|XS], [_|XSS] ) :- sinlist( [X|XS], XSS ).
