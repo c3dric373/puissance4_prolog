@@ -320,18 +320,18 @@ scoring(Nb_pieces_aligned,Score):- Nb_pieces_aligned<3, Score is Nb_pieces_align
 
  minmax(Board,0, true, H, Eval_score):-
      %get_score_heur3(Board,'X', Score),
-     get_socre_heur4(H, Board, Score),
+     get_score_heur4(H, Board, Score),
     nl,
     write('Score ='),
     write(Score),
     Eval_score is Score,!.
  minmax(Board,0,false, H, Eval_score):-
      %get_score_heur3(Board,'O', Score),
+    get_score_heur4(H, Board, Score),
        nl,
       write('Score ='),
      write(Score),
- 
-     Eval_score is Score.
+     Eval_score is Score,!.
 
 
 minmax(Board, Depth,true,_, Eval_score):- Depth \= 0,
