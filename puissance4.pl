@@ -313,13 +313,14 @@ get_score_heur4(Nb_col,Board, Score):-get_nb_aligned_pieces(B,NB_COL,Player,INDE
 
 %-----------------Start MinMax Algorithm
 minmax(Board,0, true, H, Eval_score):- 
- get_score_heur3(Board,'X', Score),
+    %get_score_heur3(Board,'X', Score),
+    get_socre_heur4(H, Board, Score),
    nl,
    write('Score ='), 
    write(Score),
    Eval_score is Score,!.
 minmax(Board,0,false, H, Eval_score):-
-    get_score_heur3(Board,'O', Score),
+    %get_score_heur3(Board,'O', Score),
       nl,
      write('Score ='),
     write(Score),
