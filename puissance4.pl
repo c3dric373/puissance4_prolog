@@ -309,6 +309,13 @@ count_diagonal_piecesReview(B,Player,NB_COL,INDEX_LIBRE,Count):- count_right_dia
 
 get_score_heur4(Nb_col,Board,Player, Score):- nth0(Nb_col,Board, Col),get_free_index_column(Col, 6, 's', INDEX_LIBRE), Real_Index_libre is INDEX_LIBRE+1, get_nb_aligned_piecesReview(Board,Nb_col,Player,Real_Index_libre, Nb_pieces_aligned),scoring(Nb_pieces_aligned,Score).
 
+ 
+ get_score_heur4(Nb_col,Board,Player, Score):- nth0(Nb_col,Board, Col),                       \+ get_free_index_column(Col, 6, 's', INDEX_LIBRE), Real_Index_libre is 0,            get_nb_aligned_piecesReview(Board,Nb_col,Player,Real_Index_libre, Nb_pieces_aligned),          scoring(Nb_pieces_aligned,Score).
+ 
+
+
+
+
 scoring(Nb_pieces_aligned,Score):- Nb_pieces_aligned>=4, Score is 10.
 scoring(Nb_pieces_aligned,Score):- Nb_pieces_aligned==3, Score is 5.
 scoring(Nb_pieces_aligned,Score):- Nb_pieces_aligned<3, Score is Nb_pieces_aligned.
@@ -320,24 +327,23 @@ scoring(Nb_pieces_aligned,Score):- Nb_pieces_aligned<3, Score is Nb_pieces_align
 
  minmax(Board,0, true, H, Eval_score):-
      %get_score_heur3(Board,'X', Score),
-     get_score_heur4(H, Board, Score),
+     get_score_heur4(H, Board,'X', Score),
     nl,
     write('Score ='),
     write(Score),
-    Eval_score is Score,!.
  minmax(Board,0,false, H, Eval_score):-
-     %get_score_heur3(Board,'O', Score),
-    get_score_heur4(H, Board, Score),
+     %     get_score_heur3(Board,'O', Score),
+     get_score_heur4(H, Board,'O', Score),
        nl,
       write('Score ='),
      write(Score),
      Eval_score is Score,!.
 
 
-minmax(Board, Depth,true,_, Eval_score):- Depth \= 0,
-Max_Eval= -1000,get_valid_moves(Board,L,Valid_moves), minmax_childs(Board, Depth, Valid_moves, MaximizingPlayer, Max_Eval, Res_Max_Eval), write(Res_Max_Eval),Eval_score is Res_Max_Eval,!. 
+minmax(Board, Depth,true,H, Eval_score):- Depth \= 0,
+Max_Eval= -1000,get_valid_moves(Board,L,Valid_moves), minmax_childs(Board, Depth, Valid_moves, MaximizingPlayer, Max_Eval, Res_Max_Eval), write(Res_Max_Eval),Eval_score is Res_Max_Eval,write('test'),!. 
 
-minmax(Board, Depth, false,_, Eval_score):- Depth \= 0,Min_Eval is 10000,    get_valid_moves(Board,L,Valid_moves), minmax_childs(Board, Depth, Valid_moves,false, Min_Eval, Res_Min_Eval), Eval_score is Res_Min_Eval,!.
+minmax(Board, Depth, false,H, Eval_score):- Depth \= 0,Min_Eval is 10000,    get_valid_moves(Board,L,Valid_moves), minmax_childs(Board, Depth, Valid_moves,false, Min_Eval, Res_Min_Eval), Eval_score is Res_Min_Eval, write('test')!.
  
 
 minmax_childs(Board, Depth, [], _, Max_Eval,Res_Max_Eval):-Res_Max_Eval is Max_Eval,!.
