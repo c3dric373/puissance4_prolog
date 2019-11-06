@@ -306,12 +306,12 @@ count_diagonal_piecesReview(B,Player,NB_COL,INDEX_LIBRE,Count):- count_right_dia
 		count_top_left_diagonal_piecesReview(B,Player,NB_COL,INDEX_LIBRE,Last_count, Real_Count):-New_NB_COL is NB_COL-1,nth0(New_NB_COL, B, COL), Next_piece is INDEX_LIBRE-1,\+nth0(Next_piece,COL,Player),Real_Count is Last_count.
 
 
-get_score_heur4(Nb_col,Board, Score):-get_nb_aligned_pieces(NB_COL,Player,INDEX_LIBRE, Nb_pieces_aligned)
+get_score_heur4(Nb_col,Board, Score):-get_nb_aligned_pieces(B,NB_COL,Player,INDEX_LIBRE, Nb_pieces_aligned).
 
 %-----------------------------
 
 
-%----------------- Start MinMax Algorithm 
+%-----------------Start MinMax Algorithm
 minmax(Board,0, true, H, Eval_score):- 
  get_score_heur3(Board,'X', Score),
    nl,
