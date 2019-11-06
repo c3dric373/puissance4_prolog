@@ -229,7 +229,7 @@ sublist([],0,0,_).
 %---------------- End Heuristic 3
 
 
-get_valid_moves([],L,Res):-append([],L,Res).
+get_valid_moves([],L,L):-!.
 get_valid_moves([H|T],L,Res):-get_free_index_column(H,6,'s',NTM),length(T,X), I is 6-X,append(L,[I],L_new),get_valid_moves(T,L_new,Res).
 get_valid_moves([H|T],L,Res):- \+get_free_index_column(H,6,'s',NTM),get_valid_moves(T,L,Res).
 
@@ -323,6 +323,19 @@ scoring(Nb_pieces_aligned,Score):- Nb_pieces_aligned<3, Score is Nb_pieces_align
 %-----------------------------
 
 
+
+
+calcul_move(Board, Depth, Player, Res):-get_valid_moves(Board,[],Valid_moves),boucle_for(Board,Depth,Valid_moves,[], Final_L), max_list(Final_L,Max), get_index_of_max(Max,Final_L, [],0,Res). 
+
+
+boucle_for(_,_,[],New_L,Final_L):-Final_L=New_L.
+ boucle_for(Board, Depth, [H|T], L, Final_L):-write(H),simulate_move(Board, H, 'O', _,       Res_Board),minmax(Res_Board, Depth, true, _,Score),append(L,[Score],New_L),  write(Final_L),boucle_for(Board, Depth, T,New_L, Final_L),!.
+
+
+
+
+
+
 %-----------------Start MinMax Algorithm
 
  minmax(Board,0, true, H, Eval_score):-
@@ -336,9 +349,9 @@ scoring(Nb_pieces_aligned,Score):- Nb_pieces_aligned<3, Score is Nb_pieces_align
 
 
 minmax(Board, Depth,true,_, Eval_score):- Depth \= 0,
-Max_Eval= -1000,get_valid_moves(Board,L,Valid_moves), minmax_childs(Board, Depth, Valid_moves, MaximizingPlayer, Max_Eval, Res_Max_Eval), Eval_score is Res_Max_Eval,!. 
+Max_Eval= -1000,get_valid_moves(Board,[],Valid_moves), minmax_childs(Board, Depth, Valid_moves, MaximizingPlayer, Max_Eval, Res_Max_Eval), Eval_score is Res_Max_Eval,!. 
 
-minmax(Board, Depth, false,_, Eval_score):- Depth \= 0,Min_Eval is 10000,    get_valid_moves(Board,L,Valid_moves), minmax_childs(Board, Depth, Valid_moves,false, Min_Eval, Res_Min_Eval), Eval_score is Res_Min_Eval,!.
+minmax(Board, Depth, false,_, Eval_score):- Depth \= 0,Min_Eval is 10000,    get_valid_moves(Board,[],Valid_moves), minmax_childs(Board, Depth, Valid_moves,false, Min_Eval, Res_Min_Eval), Eval_score is Res_Min_Eval,!.
  
 
 minmax_childs(Board, Depth, [], _, Max_Eval,Res_Max_Eval):-Res_Max_Eval is Max_Eval,!.
