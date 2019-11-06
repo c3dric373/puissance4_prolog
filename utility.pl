@@ -1,6 +1,5 @@
 
 
-
 % replacing element at index I in L
 replace([_|T], 0, X, [X|T]).
 replace([H|T], I, X, [H|R]):- I > 0, I1 is I-1,replace(T, I1, X, R).
@@ -10,6 +9,8 @@ replace([H|T], I, X, [H|R]):- I > 0, I1 is I-1,replace(T, I1, X, R).
 max(X,Y,Max):- X>=Y, Max is X.
 max(X,Y,Max):- X<Y, Max is Y.
 
+min(X, Y, Min):-X>=Y, Min =Y.
+min(X,Y,Min):-X< Y, Min=X.
 
 % Given a List it returns S the sublist L from M to N
 sublist([],0,0,_).
