@@ -317,19 +317,22 @@ scoring(Nb_pieces_aligned,Score):- Nb_pieces_aligned<3, Score is Nb_pieces_align
 
 
 %-----------------Start MinMax Algorithm
-minmax(Board,0, true, H, Eval_score):- 
- get_score_heur3(Board,'X', Score),
-   nl,
-   write('Score ='), 
-   write(Score),
-   Eval_score is Score,!.
-minmax(Board,0,false, H, Eval_score):-
-    get_score_heur3(Board,'O', Score),
-      nl,
-     write('Score ='),
+
+ minmax(Board,0, true, H, Eval_score):-
+     %get_score_heur3(Board,'X', Score),
+     get_socre_heur4(H, Board, Score),
+    nl,
+    write('Score ='),
     write(Score),
-    
-    Eval_score is Score.
+    Eval_score is Score,!.
+ minmax(Board,0,false, H, Eval_score):-
+     %get_score_heur3(Board,'O', Score),
+       nl,
+      write('Score ='),
+     write(Score),
+ 
+     Eval_score is Score.
+
 
 minmax(Board, Depth,true,_, Eval_score):- Depth \= 0,
 Max_Eval= -1000,get_valid_moves(Board,L,Valid_moves), minmax_childs(Board, Depth, Valid_moves, MaximizingPlayer, Max_Eval, Res_Max_Eval), write(Res_Max_Eval),Eval_score is Res_Max_Eval,!. 
