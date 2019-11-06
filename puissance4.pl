@@ -39,7 +39,7 @@ play('X'):-call_column('X', N_ok), Ns is N_ok-1, make_move(Ns,'X',Index),get_nb_
 play('O'):-call_column('O', N_ok), Ns is N_ok-1, make_move(Ns,'O',Index),get_nb_aligned_pieces(Ns,'O',Index, Nb_pieces_aligned),check_victory('O',Nb_pieces_aligned).
 
 check_victory('O',Nb_pieces_aligned):-Nb_pieces_aligned>=4,display, write('you win'),reset.
-check_victory('O',Nb_pieces_aligned):-Nb_pieces_aligned<4,display, playIA_heur1('X').
+check_victory('O',Nb_pieces_aligned):-Nb_pieces_aligned<4,display, playIA_heur4('X').
 check_victory('X',Nb_pieces_aligned):-Nb_pieces_aligned>=4,display, write('IA win'), reset.
 check_victory('X',Nb_pieces_aligned):-Nb_pieces_aligned<4,display,play('O').
 
@@ -322,14 +322,14 @@ scoring(Nb_pieces_aligned,Score):- Nb_pieces_aligned<3, Score is Nb_pieces_align
 
 %-----------------------------
 
-
+playIA_heur4(Player):-board(B), calcul_move(B,4,'X',Res), nth0(0, Res, Move), make_move(Move,Player,Index),get_nb_aligned_pieces(Move, Player, Index, PiecesAlignes), check_victory(Player, PiecesAlignes). 
 
 
 calcul_move(Board, Depth, Player, Res):-get_valid_moves(Board,[],Valid_moves),boucle_for(Board,Depth,Valid_moves,[], Final_L), max_list(Final_L,Max), get_index_of_max(Max,Final_L, [],0,Res). 
 
 
 boucle_for(_,_,[],New_L,Final_L):-Final_L=New_L.
- boucle_for(Board, Depth, [H|T], L, Final_L):-write(H),simulate_move(Board, H, 'O', _,       Res_Board),minmax(Res_Board, Depth, true, _,Score),append(L,[Score],New_L),  write(Final_L),boucle_for(Board, Depth, T,New_L, Final_L),!.
+ boucle_for(Board, Depth, [H|T], L, Final_L):-write(H),simulate_move(Board, H, 'X', _,       Res_Board),minmax(Res_Board, Depth, false, _,Score),append(L,[Score],New_L),  write(Final_L),boucle_for(Board, Depth, T,New_L, Final_L),!.
 
 
 
