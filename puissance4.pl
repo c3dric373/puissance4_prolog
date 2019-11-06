@@ -259,10 +259,11 @@ minmax_childs(Board, Depth, [], MaximizingPlayer, Max_Eval, Max_Eval):-!.
 minmax_childs(Board, Depth,  [H|T], MaximizingPlayer, Max_Eval, Res_Max_Eval):-
 MaximizingPlayer, simulate_move(Board,H,'O', _,Res_Board),
 N_Depth is Depth -1, minmax(Res_Board,N_Depth, false, Eval_score),
-max(Eval_score, Max_Eval, New_Max_Eval), 
-minmax_childs(Board, Depth, [T], MaximizingPlayer,New_Max_Eval, Res_Max_Eval). 
 
-minmax_childs(Board, Depth,  [H|T], MaximizingPlayer, Min_Eval, Res_Min_Eval):- \+MaximizingPlayer, simulate_move(Board,H,'X', _,Res_Board),N_Depth is Depth -1,               minmax(Res_Board,N_Depth, true, Eval_score),min(Eval_score, Min_Eval, New_Min_Eval), minmax_childs(Board, Depth, [T], MaximizingPlayer,New_Min_Eval, Res_Min_Eval).
+max(Eval_score, Max_Eval, New_Max_Eval), 
+minmax_childs(Board, Depth, T, MaximizingPlayer,New_Max_Eval, Res_Max_Eval). 
+
+minmax_childs(Board, Depth,  [H|T], MaximizingPlayer, Min_Eval, Res_Min_Eval):- \+MaximizingPlayer, simulate_move(Board,H,'X', _,Res_Board),N_Depth is Depth -1,               minmax(Res_Board,N_Depth, true, Eval_score),min(Eval_score, Min_Eval, New_Min_Eval), minmax_childs(Board, Depth, T, MaximizingPlayer,New_Min_Eval, Res_Min_Eval).
 
 
 min(X, Y, R):-X>=Y, R =Y.
