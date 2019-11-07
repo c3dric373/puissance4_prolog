@@ -22,3 +22,5 @@ N2 is N-1, S=[A|D],sublist(D,0,N2,B).
 sinlist( [], _ ).
 sinlist( [X|XS], [X|XSS] ) :- sinlist( XS, XSS ).
 sinlist( [X|XS], [_|XSS] ) :- sinlist( [X|XS], XSS ).
+
+

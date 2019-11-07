@@ -336,6 +336,12 @@ boucle_for(_,_,[],New_L,Final_L):-Final_L=New_L.
 
 
 
+
+
+
+
+
+
 %-----------------Start MinMax Algorithm
 
  minmax(Board,0, true, H, Eval_score):-
@@ -376,6 +382,20 @@ min(X,Y,R):-X< Y, R =X.
 %----------------- End MinMax Algorithm 
 
 
+get_vertical_alignment(Board,Score):-get_vertical_col(Board)
+
+
+-get_verical_col([],Sum,Score).
+-get_vertical_col([H|T],Sum,Score):-get_vertical_col_one(H,Res),Sum.
+
+
+
+-
+
+get_vertical_col_one(H, P, Score):- sinlist([P,P,P,P], H), Score = 1000. 
+-get_vertical_col_one(H, P, Score):- sinlist([P,P,P], H), Score = 10.
+-get_vertical_col_one(H, P, Score):- sinlist([P,P, H), Score = 5.
+-get_vertical_col_one(H, P, Score):- sinlist([P] H), Score = 1.
 
 
 
